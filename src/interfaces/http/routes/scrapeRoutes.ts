@@ -1,30 +1,20 @@
 import { Hono } from "hono";
-// import { createScrapeController } from "../controllers/scrapeController"; // si tu veux injecter ensuite
+import type { Scraper } from "../../../domain/services.js";
+import { createScrapeController } from "../controllers/scrapeController.js";
 
-// Le rôle de ce fichier :
-// - Créer un sous-routeur Hono responsable des routes liées au scraping
-// - Mapper chaque route HTTP vers un contrôleur
-// - Ne rien connaître des services internes ni de la logique métier
+export const createScrapeRouter = (scraper: Scraper) => {
+	const router = new Hono();
+	const scrapeController = createScrapeController(scraper);
 
-export const scrapeRouter = new Hono();
+	router.post("/", scrapeController);
 
-// 1. Route POST /scrape
-// Rôle : recevoir un body JSON, vérifier les champs,
-// appeler le contrôleur de scraping.
-scrapeRouter.post("/scrape", async (c) => {
-  // appel du contrôleur
-});
+	router.get("/scrape/status", (c) => {
+		return c.json({ status: "ok" }, 200);
+	});
 
-// 2. Route GET /scrape/status
-// Rôle : exposer un statut ou un healthcheck lié au scraping.
-scrapeRouter.get("/scrape/status", (c) => {
-  // Ici, un vrai contrôleur/healthcheck devrait être appelé.
-  // Pour l'exemple, on retourne un statut simple.
-  return c.json({ status: "ok" }, 200);
-});
+	router.get("/scrape/:id", (c) => {
+		return c.json({ status: "ok" }, 200);
+	});
 
-// 3. (Optionnel) Route pour récupérer un résultat de scraping par ID
-scrapeRouter.get("/scrape/:id", (c) => {
-  return c.json({ status: "ok" }, 200);
-  // appel d’un contrôleur "getScrapeResult"
-});
+	return router;
+};

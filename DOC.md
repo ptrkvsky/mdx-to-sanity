@@ -63,10 +63,10 @@ src/
 #### 2.2.2 Application (Use-cases)
 
 - Contient la **logique métier orchestrée**.
-- Implémente les scénarios :  
-  - `scrapeContent` : récupérer le contenu depuis une URL.  
-  - `convertToMarkdown` : transformer le contenu en Markdown.  
-  - `saveMarkdownFile` : sauvegarder le Markdown dans un fichier.  
+- Implémente les scénarios :
+  - `scrapeContent` : récupérer le contenu depuis une URL.
+  - `convertToMarkdown` : transformer le contenu en Markdown.
+  - `saveMarkdownFile` : sauvegarder le Markdown dans un fichier.
   - `publishToSanity` : envoyer l’article vers Sanity.
 
 #### 2.2.3 Infrastructure
@@ -80,8 +80,8 @@ src/
 #### 2.2.4 Interfaces / Entrées
 
 - Points d’entrée de l’application.
-- Pour le backend Hono :  
-  - `routes/` : définit les routes REST.  
+- Pour le backend Hono :
+  - `routes/` : définit les routes REST.
   - `controllers/` : appelle les use-cases avec les dépendances injectées.
 
 #### 2.2.5 Injection de dépendances
@@ -146,7 +146,7 @@ Contenu de l'article en Markdown...
 Exemple de route :
 
 ```ts
-app.post('/scrape', scrapeController(deps));
+app.post("/scrape", scrapeController(deps));
 ```
 
 ---

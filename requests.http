@@ -1,0 +1,40 @@
+### Variables
+@baseUrl = http://localhost:7777
+@apiUrl = {{baseUrl}}/api/scrape
+
+### Test de la route racine
+GET {{baseUrl}}/
+
+### Test du statut du scraping
+GET {{apiUrl}}/status
+
+### Scraper une URL (POST)
+POST {{apiUrl}}
+Content-Type: application/json
+
+{
+  "url": "https://tkdodo.eu/blog/tooltip-components-should-not-exist"
+}
+
+### Scraper une autre URL
+POST {{apiUrl}}
+Content-Type: application/json
+
+{
+  "url": "https://tkdodo.eu/blog/context-inheritance-in-tan-stack-router"
+}
+
+### Test avec une URL invalide (devrait retourner une erreur)
+POST {{apiUrl}}
+Content-Type: application/json
+
+{
+  "url": ""
+}
+
+### Test sans URL (devrait retourner une erreur)
+POST {{apiUrl}}
+Content-Type: application/json
+
+{
+}

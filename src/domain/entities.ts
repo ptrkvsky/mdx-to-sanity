@@ -1,6 +1,5 @@
 export type Article = {
-  title: string;
-  content: string;
-  rawHtml: string;
-  date: string;
+	title: string;
+	content: string;
+	date: string;
 };
