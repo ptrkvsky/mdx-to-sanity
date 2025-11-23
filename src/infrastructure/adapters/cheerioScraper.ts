@@ -9,7 +9,7 @@ const extractTitle = ($: cheerio.CheerioAPI): string => {
 };
 
 const extractContent = ($: cheerio.CheerioAPI): string => {
-	const articleContent = $("main").first().text().trim();
+	const articleContent = cleanHtml($, "main").first().text().trim();
 	return articleContent || "No content found";
 };
 
@@ -19,6 +19,26 @@ const createArticle = (title: string, content: string): Article => {
 		content: content,
 		date: new Date().toISOString().split("T")[0],
 	};
+};
+
+const cleanHtml = ($: cheerio.CheerioAPI, selector: string) => {
+	// Cloner le sélecteur pour ne pas modifier l'original
+	const $content = $(selector).first().clone();
+
+	$content.find("style, script").remove();
+
+	$content.find("*").removeAttr("style");
+
+	$content.find("*").removeAttr("class");
+
+	$content.find("[class*='css-'], [id*='css-']").each((_, el) => {
+		const $el = $(el);
+		if ($el.text().trim().length < 10 && $el.children().length === 0) {
+			$el.remove();
+		}
+	});
+
+	return $content;
 };
 
 const scrapeUrl = async (url: string): Promise<Article> => {
