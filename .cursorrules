@@ -1,0 +1,160 @@
+# Cursor Rules - Clean Code, KISS & SOLID
+
+## Principes Fondamentaux
+
+### Clean Code
+
+- **Noms explicites** : Utiliser des noms de variables, fonctions et classes qui décrivent clairement leur intention
+- **Fonctions courtes** : Maximum 20 lignes par fonction. Si une fonction fait plus, la diviser en fonctions plus petites
+- **Une seule responsabilité** : Chaque fonction/classe doit faire une seule chose et la faire bien
+- **DRY (Don't Repeat Yourself)** : Éviter la duplication de code. Extraire les patterns communs
+- **Commentaires utiles** : Éviter les commentaires évidents. Préférer un code auto-documenté
+- **Gestion d'erreurs** : Toujours gérer les erreurs explicitement avec des messages clairs
+- **Pas de code mort** : Supprimer le code commenté ou inutilisé
+
+### KISS (Keep It Simple, Stupid)
+
+- **Simplicité avant tout** : Choisir la solution la plus simple qui fonctionne
+- **Éviter la sur-ingénierie** : Ne pas créer d'abstractions avant d'en avoir besoin
+- **Lisibilité > Performance** : Optimiser seulement quand c'est nécessaire et mesuré
+- **Pas de complexité inutile** : Éviter les patterns complexes sans justification claire
+- **Solutions directes** : Préférer les approches directes aux solutions "intelligentes" mais obscures
+
+### SOLID
+
+- **S - Single Responsibility** : Chaque classe/module a une seule raison de changer
+- **O - Open/Closed** : Ouvert à l'extension, fermé à la modification
+- **L - Liskov Substitution** : Les sous-types doivent être substituables à leurs types de base
+- **I - Interface Segregation** : Préférer plusieurs interfaces spécifiques à une interface générale
+- **D - Dependency Inversion** : Dépendre d'abstractions, pas de concrétions
+
+## Règles TypeScript Spécifiques
+
+### Types et Interfaces
+
+- **Types explicites** : Éviter `any`. Utiliser `unknown` si le type est vraiment inconnu
+- **Interfaces minimales** : Créer des interfaces petites et focalisées (Interface Segregation)
+- **Types utilitaires** : Utiliser `Pick`, `Omit`, `Partial` pour éviter la duplication
+- **Type guards** : Utiliser des type guards pour la validation de types
+- **Enums vs Unions** : Préférer les union types aux enums sauf si nécessaire
+
+### Fonctions
+
+- **Paramètres limités** : Maximum 3 paramètres. Utiliser des objets pour plus de paramètres
+- **Fonctions pures** : Préférer les fonctions pures (pas d'effets de bord) quand possible
+- **Return types explicites** : Spécifier les types de retour pour la clarté
+- **Async/await** : Utiliser async/await plutôt que les promesses chaînées
+- **Gestion d'erreurs async** : Toujours utiliser try/catch avec async/await
+
+### Classes et Modules
+
+- **Classes minimales** : Éviter les classes si une fonction suffit
+- **Dependency Injection** : Injecter les dépendances plutôt que de les créer dans la classe
+- **Exports nommés** : Préférer les exports nommés aux exports par défaut
+- **Barrel exports** : Utiliser des fichiers index.ts pour organiser les exports
+
+## Structure de Code
+
+### Organisation des Fichiers
+
+- **Un fichier = Une responsabilité** : Un fichier doit avoir un seul objectif clair
+- **Structure modulaire** : Organiser par fonctionnalité, pas par type de fichier
+- **Noms de fichiers** : Utiliser kebab-case pour les fichiers (ex: `mdx-parser.ts`)
+- **Dossiers** : Créer des dossiers pour regrouper les fonctionnalités liées
+
+### Imports
+
+- **Imports organisés** : Grouper les imports (externe, interne, types)
+- **Imports absolus** : Utiliser des imports absolus avec des alias si configuré
+- **Pas d'imports circulaires** : Éviter les dépendances circulaires entre modules
+
+## Hono Framework Spécifique
+
+### Routes
+
+- **Routes modulaires** : Séparer les routes par domaine/fonctionnalité
+- **Handlers simples** : Les handlers doivent être courts et déléguer la logique métier
+- **Middleware réutilisable** : Extraire la logique commune dans des middlewares
+- **Validation** : Valider les entrées avec des schémas (Zod recommandé)
+
+### Erreurs
+
+- **Error handling centralisé** : Utiliser des error handlers Hono pour gérer les erreurs
+- **Codes HTTP appropriés** : Utiliser les bons codes de statut HTTP
+- **Messages d'erreur clairs** : Retourner des messages d'erreur explicites
+
+## Tests et Qualité
+
+### Tests
+
+- **Tests unitaires** : Tester chaque fonction isolément
+- **Tests d'intégration** : Tester les interactions entre composants
+- **Nommage des tests** : Utiliser des noms descriptifs (ex: `should return error when input is invalid`)
+- **AAA Pattern** : Arrange, Act, Assert dans les tests
+
+### Code Quality
+
+- **Linting** : Respecter les règles ESLint/TypeScript
+- **Formatage** : Utiliser Prettier pour la cohérence
+- **Complexité cyclomatique** : Maintenir une complexité faible (< 10)
+
+## Exemples de Bonnes Pratiques
+
+### ✅ BON
+
+```typescript
+// Fonction simple avec un nom explicite
+function parseMdxContent(content: string): ParsedMdx {
+  // Logique claire et directe
+}
+
+// Interface spécifique et minimale
+interface MdxMetadata {
+  title: string;
+  date: Date;
+}
+
+// Handler Hono simple qui délègue
+app.get("/api/mdx", async (c) => {
+  const content = await getMdxContent();
+  return c.json(content);
+});
+```
+
+### ❌ MAUVAIS
+
+```typescript
+// Fonction trop complexe avec nom vague
+function process(data: any): any {
+  // 50 lignes de code mélangeant plusieurs responsabilités
+}
+
+// Interface trop large
+interface Everything {
+  // 20+ propriétés non liées
+}
+
+// Handler qui fait tout
+app.get("/api/mdx", async (c) => {
+  // 100 lignes de logique métier, validation, transformation, etc.
+});
+```
+
+## Checklist Avant de Commiter
+
+- [ ] Code lisible et auto-documenté
+- [ ] Fonctions courtes (< 20 lignes)
+- [ ] Une seule responsabilité par fonction/classe
+- [ ] Pas de duplication de code
+- [ ] Types explicites (pas de `any`)
+- [ ] Gestion d'erreurs appropriée
+- [ ] Tests ajoutés/modifiés si nécessaire
+- [ ] Pas de code mort ou commenté
+- [ ] Solution la plus simple qui fonctionne
+
+## Priorités
+
+1. **Lisibilité** : Le code doit être facile à comprendre
+2. **Simplicité** : La solution la plus simple est souvent la meilleure
+3. **Maintenabilité** : Le code doit être facile à modifier et étendre
+4. **Testabilité** : Le code doit être facile à tester
