@@ -40,6 +40,7 @@
 
 ### Fonctions
 
+- **Fonctions classiques pour réutilisation** : Utiliser des fonctions classiques (`function`) plutôt que des fonctions fléchées (`=>`) pour les fonctions déclarées et réutilisables. Les fonctions fléchées sont réservées aux callbacks et fonctions inline
 - **Paramètres limités** : Maximum 3 paramètres. Utiliser des objets pour plus de paramètres
 - **Fonctions pures** : Préférer les fonctions pures (pas d'effets de bord) quand possible
 - **Return types explicites** : Spécifier les types de retour pour la clarté
@@ -67,6 +68,14 @@
 - **Imports organisés** : Grouper les imports (externe, interne, types)
 - **Imports absolus** : Utiliser des imports absolus avec des alias si configuré
 - **Pas d'imports circulaires** : Éviter les dépendances circulaires entre modules
+
+## Outils et Dépendances
+
+### Gestionnaire de Paquets
+
+- **PNPM privilégié** : Utiliser PNPM comme gestionnaire de paquets par défaut. Utiliser `pnpm install`, `pnpm add`, `pnpm remove` plutôt que npm ou yarn
+- **Lock file** : Toujours commiter le fichier `pnpm-lock.yaml` pour garantir la reproductibilité des installations
+- **Scripts package.json** : Utiliser `pnpm run <script>` pour exécuter les scripts définis dans package.json
 
 ## Hono Framework Spécifique
 
@@ -103,9 +112,14 @@
 ### ✅ BON
 
 ```typescript
-// Fonction simple avec un nom explicite
+// Fonction classique pour fonction réutilisable
 function parseMdxContent(content: string): ParsedMdx {
   // Logique claire et directe
+}
+
+// Fonction classique exportée
+export function validateInput(input: string): boolean {
+  return input.length > 0;
 }
 
 // Interface spécifique et minimale
@@ -114,7 +128,7 @@ interface MdxMetadata {
   date: Date;
 }
 
-// Handler Hono simple qui délègue
+// Handler Hono simple qui délègue (fonction fléchée OK pour callback)
 app.get("/api/mdx", async (c) => {
   const content = await getMdxContent();
   return c.json(content);
@@ -124,6 +138,11 @@ app.get("/api/mdx", async (c) => {
 ### ❌ MAUVAIS
 
 ```typescript
+// Fonction fléchée pour fonction réutilisable (utiliser function à la place)
+const parseMdxContent = (content: string): ParsedMdx => {
+  // Logique claire et directe
+};
+
 // Fonction trop complexe avec nom vague
 function process(data: any): any {
   // 50 lignes de code mélangeant plusieurs responsabilités
@@ -151,6 +170,7 @@ app.get("/api/mdx", async (c) => {
 - [ ] Tests ajoutés/modifiés si nécessaire
 - [ ] Pas de code mort ou commenté
 - [ ] Solution la plus simple qui fonctionne
+- [ ] PNPM utilisé pour la gestion des dépendances (pas npm/yarn)
 
 ## Priorités
 

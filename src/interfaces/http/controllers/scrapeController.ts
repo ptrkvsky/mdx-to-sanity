@@ -1,16 +1,22 @@
 import type { Context } from "hono";
-import { scrapeContent } from "../../../application/use-cases/scrapeContent.js";
-import type { Scraper } from "../../../domain/services.js";
+import { scrapeAndTransform } from "../../../application/use-cases/scrapeAndTransform.js";
+import type {
+	MarkdownTransformerWithSEO,
+	Scraper,
+} from "../../../domain/services.js";
 
-const validateUrl = (body: unknown): string | null => {
+function validateUrl(body: unknown): string | null {
 	if (typeof body === "object" && body !== null && "url" in body) {
 		const url = (body as { url: unknown }).url;
 		return typeof url === "string" ? url : null;
 	}
 	return null;
-};
+}
 
-export const createScrapeController = (scraper: Scraper) => {
+export function createScrapeController(
+	scraper: Scraper,
+	transformer: MarkdownTransformerWithSEO,
+) {
 	return async (c: Context) => {
 		try {
 			const body = await c.req.json();
@@ -20,16 +26,21 @@ export const createScrapeController = (scraper: Scraper) => {
 				return c.json({ error: "URL is required and must be a string" }, 400);
 			}
 
-			const scrapeArticle = scrapeContent(scraper);
-			const article = await scrapeArticle(url);
+			const scrapeAndTransformArticle = scrapeAndTransform(
+				scraper,
+				transformer,
+			);
+			const markdown = await scrapeAndTransformArticle(url);
 
-			// Logger le résultat en JSON
-			console.log(JSON.stringify(article, null, 2));
+			// Logger le résultat
+			console.log(markdown);
 
-			return c.json(article, 200);
+			return c.text(markdown, 200, {
+				"Content-Type": "text/markdown",
+			});
 		} catch (error) {
 			console.error("Scraping error:", error);
-			return c.json({ error: "Failed to scrape content" }, 500);
+			return c.json({ error: "Failed to scrape and transform content" }, 500);
 		}
 	};
-};
+}

@@ -2,26 +2,26 @@ import * as cheerio from "cheerio";
 import type { Article } from "../../domain/entities.js";
 import type { Scraper } from "../../domain/services.js";
 
-const extractTitle = ($: cheerio.CheerioAPI): string => {
+function extractTitle($: cheerio.CheerioAPI): string {
 	return (
 		$("title").text().trim() || $("h1").first().text().trim() || "Untitled"
 	);
-};
+}
 
-const extractContent = ($: cheerio.CheerioAPI): string => {
+function extractContent($: cheerio.CheerioAPI): string {
 	const articleContent = cleanHtml($, "main").first().text().trim();
 	return articleContent || "No content found";
-};
+}
 
-const createArticle = (title: string, content: string): Article => {
+function createArticle(title: string, content: string): Article {
 	return {
 		title,
 		content: content,
 		date: new Date().toISOString().split("T")[0],
 	};
-};
+}
 
-const cleanHtml = ($: cheerio.CheerioAPI, selector: string) => {
+function cleanHtml($: cheerio.CheerioAPI, selector: string) {
 	// Cloner le sélecteur pour ne pas modifier l'original
 	const $content = $(selector).first().clone();
 
@@ -39,9 +39,9 @@ const cleanHtml = ($: cheerio.CheerioAPI, selector: string) => {
 	});
 
 	return $content;
-};
+}
 
-const scrapeUrl = async (url: string): Promise<Article> => {
+async function scrapeUrl(url: string): Promise<Article> {
 	const response = await fetch(url);
 	const html = await response.text();
 	const $ = cheerio.load(html);
@@ -50,8 +50,10 @@ const scrapeUrl = async (url: string): Promise<Article> => {
 	const content = extractContent($);
 
 	return createArticle(title, content);
-};
+}
 
-export const createCheerioScraper = (): Scraper => ({
-	scrape: scrapeUrl,
-});
+export function createCheerioScraper(): Scraper {
+	return {
+		scrape: scrapeUrl,
+	};
+}
