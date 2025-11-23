@@ -7,22 +7,26 @@ La couche **Application** contient la logique métier orchestrée. C'est ici que
 Cette couche est responsable de :
 - Orchestrer les scénarios métier (use-cases)
 - Combiner les services du Domain pour réaliser une action complète
-- Ne pas connaître les détails techniques (comment on scrape, comment on sauvegarde)
+- Ne pas connaître les détails techniques (comment on scrape, comment on transforme)
 
 ## Structure
 
 ```
 application/
   use-cases/
-    scrapeContent.ts        # Scraper une URL
-    convertToMarkdown.ts    # Transformer HTML en Markdown (futur)
-    saveMarkdownFile.ts     # Sauvegarder un fichier (futur)
-    publishToSanity.ts      # Publier sur Sanity (futur)
+    scrapeContent.ts          # Scraper une URL
+    scrapeAndTransform.ts     # Scraper et transformer en Markdown avec SEO
+    enrichArticle.ts           # Enrichir un article avec métadonnées SEO
+    convertToMarkdown.ts      # Convertir un article enrichi en Markdown formaté
 ```
 
-## Exemple concret : scrapeContent
+## Use-cases disponibles
 
-### Code actuel
+### 1. scrapeContent
+
+Scrape une URL et retourne un Article.
+
+**Code actuel :**
 
 ```typescript
 // application/use-cases/scrapeContent.ts
@@ -33,11 +37,67 @@ export const scrapeContent =
   };
 ```
 
-### Explication étape par étape
+**Rôle** : Récupérer le contenu depuis une URL en utilisant le scraper injecté.
 
-1. **Currying** : `scrapeContent` prend d'abord le `scraper` en paramètre
-2. **Retourne une fonction** : Qui prend l'`url` et retourne une `Promise<Article>`
-3. **Injection de dépendances** : Le scraper est injecté, pas créé dans le use-case
+### 2. scrapeAndTransform
+
+Scrape une URL et transforme directement le contenu en Markdown avec métadonnées SEO.
+
+**Code actuel :**
+
+```typescript
+// application/use-cases/scrapeAndTransform.ts
+export const scrapeAndTransform =
+  (scraper: Scraper, transformer: MarkdownTransformerWithSEO) =>
+  async (url: string): Promise<string> => {
+    // 1. Scraper
+    const scrapeArticle = scrapeContent(scraper);
+    const article = await scrapeArticle(url);
+
+    // 2. Transformer directement en Markdown avec métadonnées SEO
+    const markdown = await transformer.transformToMarkdownWithSEO(article);
+
+    return markdown;
+  };
+```
+
+**Rôle** : Orchestrer le scraping et la transformation en Markdown optimisé SEO. C'est le use-case principal utilisé par le controller.
+
+### 3. enrichArticle
+
+Enrichit un article avec des métadonnées SEO (description, tags, keywords, etc.).
+
+**Code actuel :**
+
+```typescript
+// application/use-cases/enrichArticle.ts
+export const enrichArticle =
+  (enricher: ArticleEnrichiService) =>
+  async (article: Article): Promise<ArticleEnrichi> => {
+    return await enricher.enrichArticle(article);
+  };
+```
+
+**Rôle** : Enrichir un article avec des métadonnées SEO en utilisant le service d'enrichissement injecté.
+
+### 4. convertToMarkdown
+
+Convertit un article enrichi en Markdown formaté avec frontmatter.
+
+**Code actuel :**
+
+```typescript
+// application/use-cases/convertToMarkdown.ts
+export const convertToMarkdown =
+  (formatter: MarkdownFormatter) =>
+  (articleEnriched: ArticleEnrichi): string => {
+    return formatter.formatMarkdown(articleEnriched);
+  };
+```
+
+**Rôle** : Formater un article enrichi en Markdown avec frontmatter YAML.
+
+## Explication : Currying et Injection de Dépendances
 
 ### Pourquoi cette approche ?
 
@@ -68,15 +128,17 @@ export const scrapeContent = (scraper: Scraper) => async (url: string) => {
 ```
 Controller appelle le use-case
     ↓
-scrapeContent(scraper)  ← Injection de dépendance
+scrapeAndTransform(scraper, transformer)  ← Injection de dépendances
     ↓
 Retourne une fonction qui prend l'URL
     ↓
-scrapeArticle(url)      ← Appel avec les données
+scrapeAndTransformArticle(url)      ← Appel avec les données
     ↓
-scraper.scrape(url)     ← Utilise l'interface du Domain
+scrapeContent(scraper)(url)         ← Scraping
     ↓
-Retourne Article
+transformer.transformToMarkdownWithSEO(article)  ← Transformation
+    ↓
+Retourne Markdown avec frontmatter
 ```
 
 ## Exemple d'utilisation
@@ -84,42 +146,17 @@ Retourne Article
 Dans le controller :
 
 ```typescript
-// 1. Créer le scraper (dans index.ts)
+// 1. Créer les dépendances (dans index.ts)
 const scraper = createCheerioScraper();
+const transformer = createOpenAIMarkdownTransformer(apiKey);
 
 // 2. Injecter dans le controller
-const scrapeController = createScrapeController(scraper);
+const scrapeController = createScrapeController(scraper, transformer);
 
 // 3. Dans le controller, utiliser le use-case
-const scrapeArticle = scrapeContent(scraper);
-const article = await scrapeArticle(url);
+const scrapeAndTransformArticle = scrapeAndTransform(scraper, transformer);
+const markdown = await scrapeAndTransformArticle(url);
 ```
-
-## Use-cases futurs
-
-### Exemple : Scraper + Transformer + Sauvegarder
-
-```typescript
-export const scrapeAndSave = (
-  scraper: Scraper,
-  transformer: MarkdownTransformer,
-  repository: FileRepository
-) => async (url: string) => {
-  // 1. Scraper
-  const article = await scraper.scrape(url);
-  
-  // 2. Transformer en Markdown
-  const markdown = transformer.toMarkdown(article.rawHtml);
-  
-  // 3. Sauvegarder
-  const filename = `${article.date}-${article.title}.md`;
-  await repository.saveMarkdown(filename, markdown);
-  
-  return { article, filename };
-};
-```
-
-**Rôle** : Orchestrer plusieurs services pour réaliser un scénario complet.
 
 ## Bonnes pratiques
 
@@ -127,6 +164,7 @@ export const scrapeAndSave = (
 2. **Injection de dépendances** : Les services sont injectés, pas créés
 3. **Fonctions pures** : Les use-cases sont des fonctions pures (pas d'effets de bord cachés)
 4. **Pas de détails techniques** : Le use-case ne sait pas comment le scraper fonctionne, juste ce qu'il fait
+5. **Composition** : Les use-cases peuvent composer d'autres use-cases (ex: `scrapeAndTransform` utilise `scrapeContent`)
 
 ## Dépendances
 
@@ -139,25 +177,27 @@ export const scrapeAndSave = (
 ```
 ┌─────────────────────────────────────┐
 │    Interfaces (Controller)          │
-│  createScrapeController(scraper)   │
+│  createScrapeController(...)        │
 └──────────────┬─────────────────────┘
                │ appelle
                ↓
 ┌─────────────────────────────────────┐
-│    Application (Use-case)           │  ← Vous êtes ici
-│  scrapeContent(scraper)(url)       │
+│    Application (Use-case)            │  ← Vous êtes ici
+│  scrapeAndTransform(...)(url)       │
 └──────────────┬─────────────────────┘
                │ utilise
                ↓
 ┌─────────────────────────────────────┐
 │    Domain (Interface)                │
-│  type Scraper = { scrape(...) }    │
+│  type Scraper = { scrape(...) }     │
+│  type MarkdownTransformerWithSEO    │
 └──────────────┬─────────────────────┘
                ↑ implémenté par
                │
 ┌─────────────────────────────────────┐
 │    Infrastructure (Adapter)          │
 │  createCheerioScraper()             │
+│  createOpenAIMarkdownTransformer() │
 └─────────────────────────────────────┘
 ```
 

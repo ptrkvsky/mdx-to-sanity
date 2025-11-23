@@ -1,13 +1,13 @@
 # Infrastructure (Implémentations concrètes)
 
-L'**infrastructure** contient les implémentations concrètes des interfaces définies dans le **Domain**. C'est ici que vous utilisez les technologies réelles (cheerio, fichiers système, base de données, etc.).
+L'**infrastructure** contient les implémentations concrètes des interfaces définies dans le **Domain**. C'est ici que vous utilisez les technologies réelles (cheerio, OpenAI API, gray-matter, etc.).
 
 ## Rôle
 
 Cette couche est responsable de :
 - Implémenter les interfaces abstraites du Domain
 - Utiliser les technologies concrètes (librairies externes)
-- Gérer les détails techniques (fichiers, réseau, base de données, etc.)
+- Gérer les détails techniques (réseau, API externes, formatage, etc.)
 
 ## Principe : Inversion de Dépendance
 
@@ -27,16 +27,20 @@ Le Domain définit **CE QU'ON VEUT FAIRE** (interface `Scraper`), et l'Infrastru
 ```
 infrastructure/
   adapters/
-    cheerioScraper.ts      # Implémente Scraper avec cheerio
-    fileSystemRepository.ts # Implémente FileRepository (futur)
-    sanityPublisher.ts      # Implémente SanityPublisher (futur)
+    cheerioScraper.ts              # Implémente Scraper avec cheerio
+    openAIMarkdownTransformer.ts    # Implémente MarkdownTransformerWithSEO avec OpenAI
+    openAIEnricher.ts               # Implémente ArticleEnrichiService avec OpenAI
+    markdownFormatter.ts            # Implémente MarkdownFormatter avec gray-matter
+    markdownTransformer.ts          # Implémentation basique de MarkdownTransformer (stub)
 ```
 
-## Exemple concret : CheerioScraper
+## Adapters disponibles
 
-### Interface dans le Domain
+### 1. CheerioScraper
 
-Le Domain définit l'interface abstraite :
+Implémente l'interface `Scraper` avec la bibliothèque cheerio.
+
+**Interface dans le Domain :**
 
 ```typescript
 // domain/services.ts
@@ -45,9 +49,7 @@ export type Scraper = {
 };
 ```
 
-### Implémentation dans l'Infrastructure
-
-L'infrastructure implémente cette interface avec cheerio :
+**Implémentation :**
 
 ```typescript
 // infrastructure/adapters/cheerioScraper.ts
@@ -58,14 +60,125 @@ export const createCheerioScraper = (): Scraper => ({
     const $ = cheerio.load(html);
     
     const title = $("title").text().trim();
-    const content = $("article").text().trim();
+    const content = $("article, main, .content").text().trim();
+    const date = new Date().toISOString().split("T")[0];
     
-    return { title, content, rawHtml: html, date: "..." };
+    return { title, content, date };
   }
 });
 ```
 
 **Rôle** : Utiliser cheerio pour extraire le contenu d'une page web.
+
+### 2. OpenAIMarkdownTransformer
+
+Implémente l'interface `MarkdownTransformerWithSEO` avec l'API OpenAI.
+
+**Interface dans le Domain :**
+
+```typescript
+// domain/services.ts
+export type MarkdownTransformerWithSEO = {
+  transformToMarkdownWithSEO(article: Article): Promise<string>;
+};
+```
+
+**Implémentation :**
+
+```typescript
+// infrastructure/adapters/openAIMarkdownTransformer.ts
+export function createOpenAIMarkdownTransformer(
+  apiKey: string,
+): MarkdownTransformerWithSEO {
+  return {
+    transformToMarkdownWithSEO: async (article: Article): Promise<string> => {
+      // 1. Appel OpenAI pour transformer le contenu en Markdown structuré
+      // 2. Génération de métadonnées SEO (description, tags, keywords, seoTitle)
+      // 3. Calcul des métadonnées (readingTime, wordCount)
+      // 4. Génération du frontmatter avec gray-matter
+      // 5. Retour du Markdown complet avec frontmatter
+    }
+  };
+}
+```
+
+**Rôle** : 
+- Transformer le contenu HTML en Markdown structuré et optimisé SEO
+- Générer des métadonnées SEO (description, tags, keywords, seoTitle)
+- Calculer le temps de lecture et le nombre de mots
+- Générer le frontmatter YAML avec gray-matter
+
+**Fonctionnalités** :
+- Structure hiérarchique (h2, h3) pour le SEO
+- Formatage automatique du code avec détection du langage
+- Nettoyage des métadonnées mélangées dans le contenu
+- Optimisation SEO du contenu
+
+### 3. OpenAIEnricher
+
+Implémente l'interface `ArticleEnrichiService` avec l'API OpenAI.
+
+**Interface dans le Domain :**
+
+```typescript
+// domain/services.ts
+export type ArticleEnrichiService = {
+  enrichArticle(article: Article): Promise<ArticleEnrichi>;
+};
+```
+
+**Implémentation :**
+
+```typescript
+// infrastructure/adapters/openAIEnricher.ts
+export function createOpenAIEnricher(apiKey: string): ArticleEnrichiService {
+  return {
+    enrichArticle: async (article: Article): Promise<ArticleEnrichi> => {
+      // 1. Appel OpenAI pour générer les métadonnées SEO
+      // 2. Appel OpenAI pour transformer le contenu en Markdown structuré
+      // 3. Calcul des métadonnées (readingTime, wordCount)
+      // 4. Retour de l'article enrichi avec toutes les métadonnées
+    }
+  };
+}
+```
+
+**Rôle** : Enrichir un article avec des métadonnées SEO complètes en utilisant OpenAI.
+
+### 4. MarkdownFormatter
+
+Implémente l'interface `MarkdownFormatter` avec gray-matter.
+
+**Interface dans le Domain :**
+
+```typescript
+// domain/services.ts
+export type MarkdownFormatter = {
+  formatMarkdown(articleEnriched: ArticleEnrichi): string;
+};
+```
+
+**Implémentation :**
+
+```typescript
+// infrastructure/adapters/markdownFormatter.ts
+export const createMarkdownFormatter = (): MarkdownFormatter => {
+  return {
+    formatMarkdown: (articleEnriched: ArticleEnrichi): string => {
+      const frontmatter = createFrontmatter(articleEnriched);
+      return matter.stringify(articleEnriched.content, frontmatter);
+    },
+  };
+};
+```
+
+**Rôle** : Formater un article enrichi en Markdown avec frontmatter YAML en utilisant gray-matter.
+
+### 5. MarkdownTransformer
+
+Implémentation basique (stub) de l'interface `MarkdownTransformer`.
+
+**Rôle** : Implémentation de base pour transformer HTML en Markdown (actuellement retourne le HTML tel quel).
 
 ## Pourquoi cette séparation est puissante ?
 
@@ -86,38 +199,46 @@ Le reste de l'application (use-cases, controllers) reste **inchangé** !
 
 ### 2. Testabilité
 
-Vous pouvez créer un scraper de test (mock) :
+Vous pouvez créer des adapters de test (mock) :
 
 ```typescript
 export const createMockScraper = (): Scraper => ({
   scrape: async (url: string) => {
-    return { title: "Test", content: "Test content", rawHtml: "", date: "2024-01-01" };
+    return { 
+      title: "Test", 
+      content: "Test content", 
+      date: "2024-01-01" 
+    };
   }
 });
 ```
 
 ### 3. Le Domain reste indépendant
 
-Le Domain ne sait pas que vous utilisez cheerio, Playwright, ou autre chose. Il ne dépend que de l'interface abstraite.
+Le Domain ne sait pas que vous utilisez cheerio, OpenAI, gray-matter, ou autre chose. Il ne dépend que de l'interface abstraite.
 
 ## Schéma de l'inversion de dépendance
 
 ```
 ┌─────────────────────────────────────┐
-│         Domain (services.ts)         │
+│         Domain (services.ts)        │
 │  export type Scraper = { ... }       │  ← Interface abstraite
+│  export type MarkdownTransformerWithSEO
 └─────────────────────────────────────┘
            ↑ implémenté par
            │
 ┌─────────────────────────────────────┐
-│    Infrastructure (cheerioScraper) │
-│  createCheerioScraper(): Scraper    │  ← Implémentation concrète
+│    Infrastructure (adapters)        │
+│  createCheerioScraper()             │  ← Implémentations concrètes
+│  createOpenAIMarkdownTransformer()  │
+│  createOpenAIEnricher()             │
+│  createMarkdownFormatter()          │
 └─────────────────────────────────────┘
            ↑ utilisé par
            │
 ┌─────────────────────────────────────┐
-│    Application (scrapeContent.ts)    │
-│  scrapeContent(scraper: Scraper)     │  ← Utilise l'interface
+│    Application (use-cases)          │
+│  scrapeAndTransform(...)             │  ← Utilise l'interface
 └─────────────────────────────────────┘
 ```
 
@@ -125,20 +246,15 @@ Le Domain ne sait pas que vous utilisez cheerio, Playwright, ou autre chose. Il 
 
 1. **Une seule responsabilité** : Chaque adapter implémente une seule interface
 2. **Fonctions pures quand possible** : Extraire la logique en petites fonctions testables
-3. **Gestion d'erreurs** : Gérer les erreurs techniques (réseau, fichiers, etc.)
+3. **Gestion d'erreurs** : Gérer les erreurs techniques (réseau, API, etc.)
 4. **Pas de logique métier** : L'infrastructure ne doit contenir QUE les détails techniques
+5. **Factory functions** : Utiliser des fonctions factory (`createXxx`) pour créer les adapters
 
 ## Dépendances
 
 - **Dépend de** : `domain/` (implémente les interfaces)
-- **Peut dépendre de** : Librairies externes (cheerio, fs, etc.)
+- **Peut dépendre de** : Librairies externes (cheerio, OpenAI API, gray-matter, etc.)
 - **Ne dépend PAS de** : `application/`, `interfaces/`
-
-## Exemples futurs
-
-- `fileSystemRepository.ts` : Implémente `FileRepository` pour sauvegarder des fichiers `.md`
-- `sanityPublisher.ts` : Implémente `SanityPublisher` pour publier sur Sanity
-- `playwrightScraper.ts` : Alternative à cheerio pour les sites avec JavaScript
 
 ## Relation avec les autres couches
 
@@ -151,4 +267,3 @@ Application (use-cases)
     ↑ appelé par
 Interfaces (controllers)
 ```
-
