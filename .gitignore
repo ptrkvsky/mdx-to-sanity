@@ -8,8 +8,12 @@
 .idea/usage.statistics.xml
 .idea/shelf
 
+
 #cursor
 .history
+
+# coverage
+coverage/
 
 # deps
 node_modules/

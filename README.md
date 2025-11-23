@@ -1,5 +1,8 @@
 # MDX to Sanity - Backend Scraping & Transformation
 
+[![Tests](https://github.com/ptrkvsky/mdx-to-sanity/actions/workflows/test.yml/badge.svg)](https://github.com/ptrkvsky/mdx-to-sanity/actions/workflows/test.yml)
+[![Coverage](https://img.shields.io/badge/coverage-94.4%25-brightgreen)](https://github.com/ptrkvsky/mdx-to-sanity)
+
 Backend léger construit avec **Hono** permettant de scraper du contenu web et de le transformer en Markdown optimisé SEO avec l'aide d'OpenAI.
 
 ## Fonctionnalités
@@ -126,6 +129,28 @@ src/
   interfaces/        # Points d'entrée HTTP
   index.ts          # Point d'entrée de l'application
 ```
+
+## Tests
+
+Le projet inclut une suite de tests complète avec **Vitest**.
+
+```bash
+# Exécuter les tests
+pnpm test
+
+# Mode watch
+pnpm test:watch
+
+# Avec couverture de code
+pnpm test:coverage
+```
+
+**Couverture actuelle : 94.4%**
+
+- Statements : 94.4%
+- Branches : 86.36%
+- Functions : 97.56%
+- Lines : 94.37%
 
 ## Documentation
 
