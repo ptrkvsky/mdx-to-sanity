@@ -175,5 +175,101 @@ describe("scrapeAndTransform", () => {
 
 		consoleErrorSpy.mockRestore();
 	});
+
+	it("should handle markdown with Date object in frontmatter", async () => {
+		// Arrange
+		const date = new Date("2024-01-15");
+		const mockMarkdown = `---
+title: Test Article
+date: ${date.toISOString()}
+---
+# Test Content`;
+		const mockScraper: Scraper = {
+			scrape: vi.fn().mockResolvedValue(mockArticle),
+		};
+		const mockTransformer: MarkdownTransformerWithSEO = {
+			transformToMarkdownWithSEO: vi
+				.fn()
+				.mockResolvedValue(mockMarkdown),
+		};
+		const mockRepository = createMockFileRepository();
+
+		// Act
+		const scrapeAndTransformArticle = scrapeAndTransform(
+			mockScraper,
+			mockTransformer,
+			mockRepository,
+		);
+		const result = await scrapeAndTransformArticle("https://example.com");
+
+		// Assert
+		expect(result).toBe(mockMarkdown);
+		expect(mockRepository.saveMarkdown).toHaveBeenCalledWith(
+			expect.stringMatching(/^2024-01-15-test-article\.md$/),
+			mockMarkdown,
+		);
+	});
+
+	it("should handle markdown with missing date in frontmatter", async () => {
+		// Arrange
+		const mockMarkdown = "---\ntitle: Test Article\n---\n\n# Test Content";
+		const mockScraper: Scraper = {
+			scrape: vi.fn().mockResolvedValue(mockArticle),
+		};
+		const mockTransformer: MarkdownTransformerWithSEO = {
+			transformToMarkdownWithSEO: vi
+				.fn()
+				.mockResolvedValue(mockMarkdown),
+		};
+		const mockRepository = createMockFileRepository();
+
+		// Act
+		const scrapeAndTransformArticle = scrapeAndTransform(
+			mockScraper,
+			mockTransformer,
+			mockRepository,
+		);
+		const result = await scrapeAndTransformArticle("https://example.com");
+
+		// Assert
+		expect(result).toBe(mockMarkdown);
+		expect(mockRepository.saveMarkdown).toHaveBeenCalledWith(
+			expect.stringMatching(/^\d{4}-\d{2}-\d{2}-test-article\.md$/),
+			mockMarkdown,
+		);
+	});
+
+	it("should handle markdown with unknown date type in frontmatter", async () => {
+		// Arrange - gray-matter peut parser certaines valeurs de manière inattendue
+		const mockMarkdown = `---
+title: Test Article
+date: 12345
+---
+# Test Content`;
+		const mockScraper: Scraper = {
+			scrape: vi.fn().mockResolvedValue(mockArticle),
+		};
+		const mockTransformer: MarkdownTransformerWithSEO = {
+			transformToMarkdownWithSEO: vi
+				.fn()
+				.mockResolvedValue(mockMarkdown),
+		};
+		const mockRepository = createMockFileRepository();
+
+		// Act
+		const scrapeAndTransformArticle = scrapeAndTransform(
+			mockScraper,
+			mockTransformer,
+			mockRepository,
+		);
+		const result = await scrapeAndTransformArticle("https://example.com");
+
+		// Assert - Devrait utiliser la date du jour comme fallback
+		expect(result).toBe(mockMarkdown);
+		expect(mockRepository.saveMarkdown).toHaveBeenCalledWith(
+			expect.stringMatching(/^\d{4}-\d{2}-\d{2}-test-article\.md$/),
+			mockMarkdown,
+		);
+	});
 });
 

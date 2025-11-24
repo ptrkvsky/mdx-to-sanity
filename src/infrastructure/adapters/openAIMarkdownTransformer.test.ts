@@ -132,5 +132,49 @@ describe("createOpenAIMarkdownTransformer", () => {
 		expect(result).toContain(mockArticle.title);
 		expect(result).toContain(mockArticle.content);
 	});
+
+	it("should handle API error response (non-ok status)", async () => {
+		// Arrange
+		global.fetch = vi.fn().mockResolvedValue({
+			ok: false,
+			status: 500,
+			statusText: "Internal Server Error",
+		} as unknown as Response);
+		const transformer = createOpenAIMarkdownTransformer(apiKey);
+
+		// Act
+		const result = await transformer.transformToMarkdownWithSEO(mockArticle);
+
+		// Assert - Should fallback to original content when API fails
+		expect(result).toContain(mockArticle.title);
+		expect(result).toContain(mockArticle.content);
+	});
+
+	it("should handle parsing error in combined response", async () => {
+		// Arrange - Réponse avec JSON invalide dans la section METADATA qui causera une erreur de parsing
+		const malformedResponse = `===CONTENT===
+Some content here
+===METADATA===
+{ invalid json syntax {
+===END===`;
+		global.fetch = createMockOpenAIFetch(malformedResponse);
+		const transformer = createOpenAIMarkdownTransformer(apiKey);
+		const consoleErrorSpy = vi
+			.spyOn(console, "error")
+			.mockImplementation(() => {});
+
+		// Act
+		const result = await transformer.transformToMarkdownWithSEO(mockArticle);
+
+		// Assert - Should fallback to original content when parsing fails
+		expect(result).toContain(mockArticle.title);
+		expect(result).toContain(mockArticle.content);
+		expect(consoleErrorSpy).toHaveBeenCalledWith(
+			"Error parsing combined response:",
+			expect.any(Error),
+		);
+
+		consoleErrorSpy.mockRestore();
+	});
 });
 

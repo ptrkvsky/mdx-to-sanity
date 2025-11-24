@@ -123,5 +123,42 @@ describe("createCheerioScraper", () => {
 		expect(result.title).toBe("Untitled");
 		expect(result.content).toBe("No content found");
 	});
+
+	it("should remove CSS elements with short text and no children", async () => {
+		// Arrange
+		// Note: removeAttr("class") est appelé avant le each, donc les éléments avec class="css-*"
+		// ne seront pas trouvés. On teste avec id="css-*" qui n'est pas supprimé avant.
+		const htmlWithCssElements = `
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test Article</title>
+</head>
+<body>
+  <main>
+    <div id="css-xyz789">Y</div>
+    <div id="css-keep">This is a longer text that should be kept because it has more than 10 characters</div>
+    <div id="css-short">
+      <span>Has children so should be kept</span>
+    </div>
+    <p>Regular content</p>
+  </main>
+</body>
+</html>
+`;
+		global.fetch = createMockFetch(htmlWithCssElements);
+		const scraper = createCheerioScraper();
+
+		// Act
+		const result = await scraper.scrape("https://example.com");
+
+		// Assert
+		expect(result.title).toBe("Test Article");
+		expect(result.content).toContain("Regular content");
+		expect(result.content).toContain("This is a longer text that should be kept");
+		expect(result.content).toContain("Has children so should be kept");
+		// L'élément CSS court (1 caractère) sans enfants devrait être supprimé
+		expect(result.content).not.toContain("Y");
+	});
 });
 

@@ -136,5 +136,30 @@ describe("createOpenAIEnricher", () => {
 		expect(result.content).toContain("## Content");
 		expect(result.metadata.description).toBe(mockArticle.title);
 	});
+
+	it("should handle API error response (non-ok status)", async () => {
+		// Arrange
+		global.fetch = vi.fn().mockResolvedValue({
+			ok: false,
+			status: 429,
+			statusText: "Too Many Requests",
+		} as unknown as Response);
+		const enricher = createOpenAIEnricher(apiKey);
+		const consoleErrorSpy = vi
+			.spyOn(console, "error")
+			.mockImplementation(() => {});
+
+		// Act
+		const result = await enricher.enrichArticle(mockArticle);
+
+		// Assert - L'erreur est capturée et loggée, mais le résultat est retourné avec les valeurs par défaut
+		expect(result.metadata.description).toBe(mockArticle.title);
+		expect(consoleErrorSpy).toHaveBeenCalledWith(
+			"OpenAI metadata generation failed:",
+			expect.any(Error),
+		);
+
+		consoleErrorSpy.mockRestore();
+	});
 });
 

@@ -120,5 +120,26 @@ describe("createFileRepository", () => {
 			"Failed to save markdown file",
 		);
 	});
+
+	it("should handle non-Error objects in directory creation error", async () => {
+		const repository = createFileRepository();
+		const error = "String error";
+		vi.mocked(mkdir).mockRejectedValue(error);
+
+		await expect(repository.saveMarkdown("test.md", "content")).rejects.toThrow(
+			"Failed to create storage directory",
+		);
+	});
+
+	it("should handle non-Error objects in file write error", async () => {
+		const repository = createFileRepository();
+		vi.mocked(mkdir).mockResolvedValue(undefined);
+		const error = { message: "Custom error object" };
+		vi.mocked(writeFile).mockRejectedValue(error);
+
+		await expect(repository.saveMarkdown("test.md", "content")).rejects.toThrow(
+			"Failed to save markdown file",
+		);
+	});
 });
 
