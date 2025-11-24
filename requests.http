@@ -1,6 +1,7 @@
 ### Variables
 @baseUrl = http://localhost:7777
 @apiUrl = {{baseUrl}}/api/scrape
+@markdownToSanityUrl = {{baseUrl}}/api/markdown-to-sanity
 
 ### Test de la route racine
 GET {{baseUrl}}/
@@ -37,4 +38,35 @@ POST {{apiUrl}}
 Content-Type: application/json
 
 {
+}
+
+### Convertir un fichier MD en Post Sanity (sans publier)
+POST {{markdownToSanityUrl}}
+Content-Type: application/json
+
+{
+  "filePath": "storage/markdown/2025-11-24-les-composants-tooltip-ne-devraient-pas-exister.md",
+  "publish": false
+}
+
+### Convertir un fichier MD en Post Sanity et publier sur Sanity
+POST {{markdownToSanityUrl}}
+Content-Type: application/json
+
+{
+  "filePath": "storage/markdown/2025-11-24-les-composants-tooltip-ne-devraient-pas-exister.md",
+  "publish": true
+}
+
+### Convertir du Markdown directement (sans fichier)
+POST {{markdownToSanityUrl}}
+Content-Type: application/json
+
+{
+  "markdown": "## Titre de test\n\nCeci est un **paragraphe** de test avec du *texte* en italique.",
+  "frontmatter": {
+    "title": "Article de test",
+    "description": "Description de test pour l'article"
+  },
+  "publish": false
 }

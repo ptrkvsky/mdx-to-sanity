@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { scrapeContent } from "./scrapeContent.js";
-import type { Scraper, Article } from "../../domain/services.js";
+import type { Scraper } from "../../domain/services.js";
+import type { Article } from "../../domain/entities.js";
 import { mockArticle } from "../../__tests__/fixtures/articles.js";
 
 describe("scrapeContent", () => {

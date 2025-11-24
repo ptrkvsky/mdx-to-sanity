@@ -1,4 +1,5 @@
 import type { Article, ArticleEnrichi } from "./entities.js";
+import type { BlockContent, Post } from "./schemas.js";
 
 export type Scraper = {
 	scrape(url: string): Promise<Article>;
@@ -22,4 +23,12 @@ export type MarkdownFormatter = {
 
 export type MarkdownTransformerWithSEO = {
 	transformToMarkdownWithSEO: (article: Article) => Promise<string>;
+};
+
+export type MarkdownToPortableTextConverter = {
+	convertMarkdownToPortableText: (markdown: string) => Promise<BlockContent>;
+};
+
+export type SanityClient = {
+	createDocument: (document: Post) => Promise<string>;
 };
