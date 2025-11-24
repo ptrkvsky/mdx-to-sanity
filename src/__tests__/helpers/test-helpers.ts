@@ -4,6 +4,7 @@ import type {
 	ArticleEnrichi,
 } from "../../domain/entities.js";
 import type {
+	FileRepository,
 	Scraper,
 	MarkdownTransformerWithSEO,
 	ArticleEnrichiService,
@@ -69,6 +70,12 @@ export function createMockMarkdownFormatter(
 				mockMarkdown ||
 					"---\ntitle: Test\n---\n\n# Test Content",
 			),
+	};
+}
+
+export function createMockFileRepository(): FileRepository {
+	return {
+		saveMarkdown: vi.fn().mockResolvedValue(undefined),
 	};
 }
 

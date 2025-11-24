@@ -1,8 +1,60 @@
-import type { Scraper, MarkdownTransformerWithSEO } from "../../domain/services.js";
+import matter from "gray-matter";
+import { generateFilename } from "../../infrastructure/adapters/fileRepository.js";
+import type {
+	FileRepository,
+	Scraper,
+	MarkdownTransformerWithSEO,
+} from "../../domain/services.js";
 import { scrapeContent } from "./scrapeContent.js";
 
+function extractTitleFromMarkdown(markdown: string): string {
+	const parsed = matter(markdown);
+	return (parsed.data.title as string) || "Untitled";
+}
+
+function extractDateFromMarkdown(markdown: string): string {
+	const parsed = matter(markdown);
+	const date = parsed.data.date;
+
+	if (!date) {
+		return new Date().toISOString().split("T")[0];
+	}
+
+	if (date instanceof Date) {
+		return date.toISOString().split("T")[0];
+	}
+
+	if (typeof date === "string") {
+		return date;
+	}
+
+	return new Date().toISOString().split("T")[0];
+}
+
+async function saveMarkdownIfRepositoryExists(
+	markdown: string,
+	repository: FileRepository | undefined,
+): Promise<void> {
+	if (!repository) {
+		return;
+	}
+
+	try {
+		const title = extractTitleFromMarkdown(markdown);
+		const date = extractDateFromMarkdown(markdown);
+		const filename = generateFilename(title, date);
+		await repository.saveMarkdown(filename, markdown);
+	} catch (error) {
+		console.error("Failed to save markdown file:", error);
+	}
+}
+
 export const scrapeAndTransform =
-	(scraper: Scraper, transformer: MarkdownTransformerWithSEO) =>
+	(
+		scraper: Scraper,
+		transformer: MarkdownTransformerWithSEO,
+		repository?: FileRepository,
+	) =>
 	async (url: string): Promise<string> => {
 		// 1. Scraper
 		const scrapeArticle = scrapeContent(scraper);
@@ -10,6 +62,9 @@ export const scrapeAndTransform =
 
 		// 2. Transformer directement en Markdown avec métadonnées SEO
 		const markdown = await transformer.transformToMarkdownWithSEO(article);
+
+		// 3. Sauvegarder automatiquement si repository est fourni
+		await saveMarkdownIfRepositoryExists(markdown, repository);
 
 		return markdown;
 	};

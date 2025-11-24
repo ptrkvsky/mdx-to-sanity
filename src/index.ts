@@ -2,6 +2,7 @@ import "dotenv/config";
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { createCheerioScraper } from "./infrastructure/adapters/cheerioScraper.js";
+import { createFileRepository } from "./infrastructure/adapters/fileRepository.js";
 import { createOpenAIMarkdownTransformer } from "./infrastructure/adapters/openAIMarkdownTransformer.js";
 import { createScrapeRouter } from "./interfaces/http/routes/scrapeRoutes.js";
 
@@ -21,8 +22,9 @@ if (!apiKey) {
 	);
 }
 const transformer = createOpenAIMarkdownTransformer(apiKey);
+const repository = createFileRepository();
 
-const scrapeRouter = createScrapeRouter(scraper, transformer);
+const scrapeRouter = createScrapeRouter(scraper, transformer, repository);
 app.route("/api/scrape", scrapeRouter);
 
 const port = Number(process.env.PORT) || 7777;

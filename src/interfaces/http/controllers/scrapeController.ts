@@ -1,6 +1,7 @@
 import type { Context } from "hono";
 import { scrapeAndTransform } from "../../../application/use-cases/scrapeAndTransform.js";
 import type {
+	FileRepository,
 	MarkdownTransformerWithSEO,
 	Scraper,
 } from "../../../domain/services.js";
@@ -16,6 +17,7 @@ function validateUrl(body: unknown): string | null {
 export function createScrapeController(
 	scraper: Scraper,
 	transformer: MarkdownTransformerWithSEO,
+	repository?: FileRepository,
 ) {
 	return async (c: Context) => {
 		try {
@@ -29,6 +31,7 @@ export function createScrapeController(
 			const scrapeAndTransformArticle = scrapeAndTransform(
 				scraper,
 				transformer,
+				repository,
 			);
 			const markdown = await scrapeAndTransformArticle(url);
 

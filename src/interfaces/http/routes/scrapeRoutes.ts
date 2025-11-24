@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import type {
+	FileRepository,
 	MarkdownTransformerWithSEO,
 	Scraper,
 } from "../../../domain/services.js";
@@ -8,9 +9,14 @@ import { createScrapeController } from "../controllers/scrapeController.js";
 export const createScrapeRouter = (
 	scraper: Scraper,
 	transformer: MarkdownTransformerWithSEO,
+	repository?: FileRepository,
 ) => {
 	const router = new Hono();
-	const scrapeController = createScrapeController(scraper, transformer);
+	const scrapeController = createScrapeController(
+		scraper,
+		transformer,
+		repository,
+	);
 
 	router.post("/", scrapeController);
 
