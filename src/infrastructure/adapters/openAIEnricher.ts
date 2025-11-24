@@ -196,7 +196,6 @@ export function createOpenAIEnricher(apiKey: string): ArticleEnrichiService {
 					"gpt-4o-mini",
 					4000,
 				);
-				console.log("transformedContent", transformedContent);
 				structuredContent = transformedContent.trim();
 			} catch (error) {
 				console.error(

@@ -35,9 +35,6 @@ export function createScrapeController(
 			);
 			const markdown = await scrapeAndTransformArticle(url);
 
-			// Logger le résultat
-			console.log(markdown);
-
 			return c.text(markdown, 200, {
 				"Content-Type": "text/markdown",
 			});
