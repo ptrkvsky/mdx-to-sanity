@@ -10,6 +10,7 @@ Backend léger construit avec **Hono** permettant de scraper du contenu web et d
 - **Scraping web** : Extraction de contenu depuis n'importe quelle URL
 - **Transformation Markdown** : Conversion automatique du HTML en Markdown structuré
 - **Optimisation SEO** : Enrichissement automatique avec métadonnées SEO (description, tags, keywords, etc.)
+- **Sauvegarde automatique** : Les fichiers Markdown générés sont automatiquement sauvegardés dans `storage/markdown/` avec le format `YYYY-MM-DD-slug-du-titre.md`
 - **Architecture Clean** : Architecture modulaire suivant les principes de Clean Architecture
 
 ## Installation
@@ -65,6 +66,7 @@ Scrape une URL et retourne le contenu transformé en Markdown avec métadonnées
 
 **Réponse :**
 - **200 OK** : Retourne le Markdown avec frontmatter (Content-Type: `text/markdown`)
+  - Le fichier est également sauvegardé automatiquement dans `storage/markdown/` avec le format `YYYY-MM-DD-slug-du-titre.md`
 - **400 Bad Request** : URL manquante ou invalide
 - **500 Internal Server Error** : Erreur lors du scraping ou de la transformation
 
@@ -145,12 +147,12 @@ pnpm test:watch
 pnpm test:coverage
 ```
 
-**Couverture actuelle : 94.4%**
+**Couverture actuelle : 98.5%**
 
-- Statements : 94.4%
-- Branches : 86.36%
-- Functions : 97.56%
-- Lines : 94.37%
+- Statements : 98.46%
+- Branches : 94.04%
+- Functions : 100%
+- Lines : 98.45%
 
 ## Documentation
 

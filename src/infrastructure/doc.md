@@ -32,6 +32,7 @@ infrastructure/
     openAIEnricher.ts               # Implémente ArticleEnrichiService avec OpenAI
     markdownFormatter.ts            # Implémente MarkdownFormatter avec gray-matter
     markdownTransformer.ts          # Implémentation basique de MarkdownTransformer (stub)
+    fileRepository.ts               # Implémente FileRepository pour sauvegarder les fichiers MD
 ```
 
 ## Adapters disponibles
@@ -180,6 +181,48 @@ Implémentation basique (stub) de l'interface `MarkdownTransformer`.
 
 **Rôle** : Implémentation de base pour transformer HTML en Markdown (actuellement retourne le HTML tel quel).
 
+### 6. FileRepository
+
+Implémente l'interface `FileRepository` pour sauvegarder les fichiers Markdown sur le système de fichiers.
+
+**Interface dans le Domain :**
+
+```typescript
+// domain/services.ts
+export type FileRepository = {
+  saveMarkdown(filename: string, content: string): Promise<void>;
+};
+```
+
+**Implémentation :**
+
+```typescript
+// infrastructure/adapters/fileRepository.ts
+export function createFileRepository(): FileRepository {
+  return {
+    saveMarkdown: async (filename: string, content: string) => {
+      // 1. Créer le dossier storage/markdown/ s'il n'existe pas
+      // 2. Sauvegarder le fichier avec le nom et contenu fournis
+    }
+  };
+}
+```
+
+**Rôle** : 
+- Sauvegarder les fichiers Markdown générés dans `storage/markdown/`
+- Créer automatiquement le dossier de stockage s'il n'existe pas
+- Générer le nom de fichier au format `YYYY-MM-DD-slug-du-titre.md`
+
+**Fonctionnalités** :
+- Génération automatique du nom de fichier à partir du titre et de la date
+- Conversion du titre en slug (minuscules, tirets, suppression caractères spéciaux)
+- Gestion d'erreurs avec messages explicites
+- Création récursive du dossier de stockage
+
+**Fonctions utilitaires exportées** :
+- `slugify(text: string): string` : Convertit un texte en slug
+- `generateFilename(title: string, date: string): string` : Génère le nom de fichier au format attendu
+
 ## Pourquoi cette séparation est puissante ?
 
 ### 1. Facile de changer d'implémentation
@@ -233,6 +276,7 @@ Le Domain ne sait pas que vous utilisez cheerio, OpenAI, gray-matter, ou autre c
 │  createOpenAIMarkdownTransformer()  │
 │  createOpenAIEnricher()             │
 │  createMarkdownFormatter()          │
+│  createFileRepository()             │
 └─────────────────────────────────────┘
            ↑ utilisé par
            │

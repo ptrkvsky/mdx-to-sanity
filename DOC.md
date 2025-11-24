@@ -8,6 +8,7 @@ Il permet de :
 1. Scraper du contenu depuis le web.
 2. Transformer le contenu en Markdown structuré et optimisé SEO.
 3. Enrichir le contenu avec des métadonnées SEO (description, tags, keywords, etc.).
+4. Sauvegarder automatiquement les fichiers Markdown générés dans `storage/markdown/`.
 
 L'architecture suit les principes de la **Clean Architecture**, séparant les responsabilités pour un code maintenable et évolutif.
 
@@ -35,6 +36,7 @@ src/
       openAIEnricher.ts         # Enrichissement avec OpenAI
       markdownFormatter.ts      # Formatage Markdown avec frontmatter
       markdownTransformer.ts    # Transformer HTML basique (stub)
+      fileRepository.ts          # Sauvegarde des fichiers Markdown
   interfaces/
     http/
       routes/
@@ -145,6 +147,7 @@ URL → Scraper (cheerio) → Article
    - SEO Title
    - Temps de lecture
    - Nombre de mots
+4. **Sauvegarde** : Le fichier Markdown est automatiquement sauvegardé dans `storage/markdown/` avec le format `YYYY-MM-DD-slug-du-titre.md`
 
 ### 4.2 Format Markdown généré
 
@@ -287,12 +290,42 @@ type MarkdownFormatter = {
 };
 ```
 
+### FileRepository
+
+```typescript
+type FileRepository = {
+  saveMarkdown(filename: string, content: string): Promise<void>;
+};
+```
+
+**Rôle** : Sauvegarder les fichiers Markdown générés sur le système de fichiers. Les fichiers sont sauvegardés dans `storage/markdown/` avec un nom de fichier généré automatiquement au format `YYYY-MM-DD-slug-du-titre.md`.
+
 ---
 
-## 9. Étapes futures
+## 9. Sauvegarde des fichiers
+
+Les fichiers Markdown générés sont automatiquement sauvegardés dans le dossier `storage/markdown/` lors de chaque transformation.
+
+### Format de nommage
+
+Les fichiers sont nommés selon le format : `YYYY-MM-DD-slug-du-titre.md`
+
+- `YYYY-MM-DD` : Date extraite du frontmatter ou date du jour par défaut
+- `slug-du-titre` : Titre de l'article converti en slug (minuscules, tirets, caractères spéciaux supprimés)
+
+**Exemple** : `2024-01-15-les-composants-tooltip-ne-devraient-pas-exister.md`
+
+### Emplacement
+
+Les fichiers sont sauvegardés dans `storage/markdown/` à la racine du projet. Le dossier est créé automatiquement s'il n'existe pas.
+
+### Gestion des erreurs
+
+Si la sauvegarde échoue (permissions, espace disque, etc.), l'erreur est loggée mais n'empêche pas la transformation de retourner le Markdown. Le processus de sauvegarde est non-bloquant.
+
+## 10. Étapes futures
 
 1. Ajouter un système de cache pour éviter de re-scraper les mêmes URLs.
-2. Ajouter des tests unitaires et d'intégration.
-3. Ajouter un système de logs et monitoring.
-4. Permettre de sauvegarder les articles dans des fichiers `.md`.
-5. Ajouter un système de queue pour traiter plusieurs URLs en parallèle.
+2. Ajouter un système de logs et monitoring.
+3. Ajouter un système de queue pour traiter plusieurs URLs en parallèle.
+4. Permettre de configurer le chemin de sauvegarde via variable d'environnement.

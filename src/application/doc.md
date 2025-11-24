@@ -41,14 +41,14 @@ export const scrapeContent =
 
 ### 2. scrapeAndTransform
 
-Scrape une URL et transforme directement le contenu en Markdown avec métadonnées SEO.
+Scrape une URL et transforme directement le contenu en Markdown avec métadonnées SEO. Sauvegarde automatiquement le fichier Markdown si un `FileRepository` est fourni.
 
 **Code actuel :**
 
 ```typescript
 // application/use-cases/scrapeAndTransform.ts
 export const scrapeAndTransform =
-  (scraper: Scraper, transformer: MarkdownTransformerWithSEO) =>
+  (scraper: Scraper, transformer: MarkdownTransformerWithSEO, repository?: FileRepository) =>
   async (url: string): Promise<string> => {
     // 1. Scraper
     const scrapeArticle = scrapeContent(scraper);
@@ -57,11 +57,19 @@ export const scrapeAndTransform =
     // 2. Transformer directement en Markdown avec métadonnées SEO
     const markdown = await transformer.transformToMarkdownWithSEO(article);
 
+    // 3. Sauvegarder automatiquement si repository est fourni
+    await saveMarkdownIfRepositoryExists(markdown, repository);
+
     return markdown;
   };
 ```
 
-**Rôle** : Orchestrer le scraping et la transformation en Markdown optimisé SEO. C'est le use-case principal utilisé par le controller.
+**Rôle** : 
+- Orchestrer le scraping et la transformation en Markdown optimisé SEO
+- Sauvegarder automatiquement le fichier Markdown dans `storage/markdown/` si un `FileRepository` est fourni
+- Le nom de fichier est généré automatiquement au format `YYYY-MM-DD-slug-du-titre.md` à partir du frontmatter
+
+**Note** : La sauvegarde est non-bloquante. Si elle échoue, l'erreur est loggée mais le Markdown est quand même retourné.
 
 ### 3. enrichArticle
 

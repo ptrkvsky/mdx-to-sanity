@@ -68,6 +68,8 @@ export type FileRepository = {
 };
 ```
 
+**Rôle** : Définir qu'on peut sauvegarder un fichier Markdown avec un nom de fichier et un contenu, sans dire comment (système de fichiers local, cloud storage, etc.).
+
 ## Principe : Dependency Inversion
 
 En Clean Architecture, **les dépendances pointent vers l'intérieur** :
