@@ -1,5 +1,8 @@
 import type { BlockContent } from "../../domain/schemas.js";
-import type { MarkdownToPortableTextConverter } from "../../domain/services.js";
+import type {
+	Logger,
+	MarkdownToPortableTextConverter,
+} from "../../domain/services.js";
 
 async function callOpenAI(
 	apiKey: string,
@@ -167,6 +170,7 @@ function parseBlockContentResponse(response: string): BlockContent {
 
 export function createOpenAIPortableTextConverter(
 	apiKey: string,
+	logger?: Logger,
 ): MarkdownToPortableTextConverter {
 	return {
 		convertMarkdownToPortableText: async (
@@ -177,6 +181,14 @@ export function createOpenAIPortableTextConverter(
 				const response = await callOpenAI(apiKey, prompt, "gpt-4o-mini", 4000);
 				return parseBlockContentResponse(response);
 			} catch (error) {
+				logger?.error(
+					"OpenAI conversion failed",
+					error instanceof Error ? error : new Error(String(error)),
+					{
+						model: "gpt-4o-mini",
+						markdownLength: markdown.length,
+					},
+				);
 				throw new Error(
 					`OpenAI conversion failed: ${error instanceof Error ? error.message : String(error)}`,
 				);

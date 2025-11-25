@@ -1,15 +1,21 @@
 import type { Context } from "hono";
 import { convertMarkdownToSanityPost } from "../../../application/use-cases/convertMarkdownToSanityPost.js";
 import { publishPostToSanity } from "../../../application/use-cases/publishPostToSanity.js";
-import { parseMarkdownFile } from "../../../infrastructure/adapters/markdownFileParser.js";
 import type {
+	Logger,
 	MarkdownToPortableTextConverter,
 	SanityClient,
 } from "../../../domain/services.js";
+import { parseMarkdownFile } from "../../../infrastructure/adapters/markdownFileParser.js";
+import type { CategorySelector } from "../../../infrastructure/adapters/openAICategorySelector.js";
 
 type RequestBody =
 	| { filePath: string; publish?: boolean }
-	| { markdown: string; frontmatter?: Record<string, unknown>; publish?: boolean };
+	| {
+			markdown: string;
+			frontmatter?: Record<string, unknown>;
+			publish?: boolean;
+	  };
 
 function validateRequestBody(body: unknown): RequestBody | null {
 	if (typeof body === "object" && body !== null) {
@@ -39,6 +45,8 @@ function validateRequestBody(body: unknown): RequestBody | null {
 export function createMarkdownToSanityController(
 	converter: MarkdownToPortableTextConverter,
 	sanityClient?: SanityClient,
+	categorySelector?: CategorySelector,
+	logger?: Logger,
 ) {
 	return async (c: Context) => {
 		try {
@@ -55,17 +63,19 @@ export function createMarkdownToSanityController(
 				);
 			}
 
-			const convertPost = convertMarkdownToSanityPost(converter);
+			const convertPost = convertMarkdownToSanityPost(
+				converter,
+				sanityClient,
+				categorySelector,
+				logger,
+			);
 
 			let post;
 			if ("filePath" in request) {
 				const parsed = parseMarkdownFile(request.filePath);
 				post = await convertPost(parsed.content, parsed.frontmatter);
 			} else {
-				post = await convertPost(
-					request.markdown,
-					request.frontmatter,
-				);
+				post = await convertPost(request.markdown, request.frontmatter);
 			}
 
 			if (request.publish && sanityClient) {
@@ -91,7 +101,14 @@ export function createMarkdownToSanityController(
 				200,
 			);
 		} catch (error) {
-			console.error("Markdown to Sanity conversion error:", error);
+			logger?.error(
+				"Markdown to Sanity conversion error",
+				error instanceof Error ? error : new Error(String(error)),
+				{
+					endpoint: c.req.path,
+					method: c.req.method,
+				},
+			);
 			return c.json(
 				{
 					error:
@@ -104,4 +121,3 @@ export function createMarkdownToSanityController(
 		}
 	};
 }
-

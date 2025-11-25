@@ -31,10 +31,12 @@ Créez un fichier `.env` à la racine du projet :
 ```env
 OPENAI_API_KEY=your_openai_api_key
 PORT=7777
+LOG_LEVEL=info
 ```
 
 - `OPENAI_API_KEY` : Clé API OpenAI (requis pour la transformation markdown)
 - `PORT` : Port du serveur (défaut : 7777)
+- `LOG_LEVEL` : Niveau de logging (défaut : `info`). Valeurs possibles : `debug`, `info`, `warn`, `error`
 
 ## Démarrage
 

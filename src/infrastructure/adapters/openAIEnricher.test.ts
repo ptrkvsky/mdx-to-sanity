@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createOpenAIEnricher } from "./openAIEnricher.js";
 import { mockArticle } from "../../__tests__/fixtures/articles.js";
+import { createMockLogger } from "../../__tests__/helpers/test-helpers.js";
 import {
 	createMockOpenAIFetch,
 	createMockOpenAIFetchError,
@@ -144,22 +145,21 @@ describe("createOpenAIEnricher", () => {
 			status: 429,
 			statusText: "Too Many Requests",
 		} as unknown as Response);
-		const enricher = createOpenAIEnricher(apiKey);
-		const consoleErrorSpy = vi
-			.spyOn(console, "error")
-			.mockImplementation(() => {});
+		const mockLogger = createMockLogger();
+		const enricher = createOpenAIEnricher(apiKey, mockLogger);
 
 		// Act
 		const result = await enricher.enrichArticle(mockArticle);
 
 		// Assert - L'erreur est capturée et loggée, mais le résultat est retourné avec les valeurs par défaut
 		expect(result.metadata.description).toBe(mockArticle.title);
-		expect(consoleErrorSpy).toHaveBeenCalledWith(
-			"OpenAI metadata generation failed:",
+		expect(mockLogger.error).toHaveBeenCalledWith(
+			"OpenAI metadata generation failed",
 			expect.any(Error),
+			expect.objectContaining({
+				model: "gpt-3.5-turbo",
+			}),
 		);
-
-		consoleErrorSpy.mockRestore();
 	});
 });
 

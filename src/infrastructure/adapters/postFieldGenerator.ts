@@ -9,12 +9,17 @@ function generateSlug(title: string): { _type: "slug"; current: string } {
 	};
 }
 
-function generateDefaultMainImage(): Post["mainImage"] {
+function generateDefaultMainImage(
+	defaultImageId?: string | null,
+): Post["mainImage"] | null {
+	if (!defaultImageId) {
+		return null;
+	}
 	return {
 		_type: "image",
 		asset: {
 			_type: "reference",
-			_ref: "image-placeholder-default",
+			_ref: defaultImageId,
 		},
 	};
 }
@@ -30,9 +35,10 @@ function generateDefaultCategories(): Post["categories"] {
 
 export function generateMissingPostFields(
 	frontmatter: Record<string, unknown>,
+	defaultImageId?: string | null,
 ): {
 	slug: Post["slug"];
-	mainImage: Post["mainImage"];
+	mainImage: Post["mainImage"] | null;
 	categories: Post["categories"];
 	type: Post["type"];
 	isHome: Post["isHome"];
@@ -41,10 +47,9 @@ export function generateMissingPostFields(
 
 	return {
 		slug: generateSlug(title),
-		mainImage: generateDefaultMainImage(),
+		mainImage: generateDefaultMainImage(defaultImageId),
 		categories: generateDefaultCategories(),
 		type: "post",
 		isHome: false,
 	};
 }
-

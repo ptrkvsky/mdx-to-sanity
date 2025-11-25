@@ -2,6 +2,7 @@ import matter from "gray-matter";
 import { generateFilename } from "../../infrastructure/adapters/fileRepository.js";
 import type {
 	FileRepository,
+	Logger,
 	Scraper,
 	MarkdownTransformerWithSEO,
 } from "../../domain/services.js";
@@ -34,6 +35,7 @@ function extractDateFromMarkdown(markdown: string): string {
 async function saveMarkdownIfRepositoryExists(
 	markdown: string,
 	repository: FileRepository | undefined,
+	logger?: Logger,
 ): Promise<void> {
 	if (!repository) {
 		return;
@@ -45,7 +47,16 @@ async function saveMarkdownIfRepositoryExists(
 		const filename = generateFilename(title, date);
 		await repository.saveMarkdown(filename, markdown);
 	} catch (error) {
-		console.error("Failed to save markdown file:", error);
+		logger?.error(
+			"Failed to save markdown file",
+			error instanceof Error ? error : new Error(String(error)),
+			{
+				filename: generateFilename(
+					extractTitleFromMarkdown(markdown),
+					extractDateFromMarkdown(markdown),
+				),
+			},
+		);
 	}
 }
 
@@ -54,6 +65,7 @@ export const scrapeAndTransform =
 		scraper: Scraper,
 		transformer: MarkdownTransformerWithSEO,
 		repository?: FileRepository,
+		logger?: Logger,
 	) =>
 	async (url: string): Promise<string> => {
 		// 1. Scraper
@@ -64,7 +76,7 @@ export const scrapeAndTransform =
 		const markdown = await transformer.transformToMarkdownWithSEO(article);
 
 		// 3. Sauvegarder automatiquement si repository est fourni
-		await saveMarkdownIfRepositoryExists(markdown, repository);
+		await saveMarkdownIfRepositoryExists(markdown, repository, logger);
 
 		return markdown;
 	};

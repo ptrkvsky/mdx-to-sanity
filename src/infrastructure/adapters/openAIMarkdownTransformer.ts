@@ -1,6 +1,6 @@
 import matter from "gray-matter";
 import type { Article } from "../../domain/entities.js";
-import type { MarkdownTransformerWithSEO } from "../../domain/services.js";
+import type { Logger, MarkdownTransformerWithSEO } from "../../domain/services.js";
 
 interface SEOMetadata {
 	description?: string;
@@ -76,7 +76,10 @@ Réponds avec ce format EXACT :
 ===END===`;
 }
 
-function parseCombinedResponse(response: string): {
+function parseCombinedResponse(
+	response: string,
+	logger?: Logger,
+): {
 	content: string;
 	metadata: SEOMetadata;
 } {
@@ -107,7 +110,10 @@ function parseCombinedResponse(response: string): {
 
 		return { content, metadata };
 	} catch (error) {
-		console.error("Error parsing combined response:", error);
+		logger?.error(
+			"Error parsing combined response",
+			error instanceof Error ? error : new Error(String(error)),
+		);
 		return { content: "", metadata: {} };
 	}
 }
@@ -155,6 +161,7 @@ async function callOpenAI(
 
 export function createOpenAIMarkdownTransformer(
 	apiKey: string,
+	logger?: Logger,
 ): MarkdownTransformerWithSEO {
 	return {
 		transformToMarkdownWithSEO: async (article: Article): Promise<string> => {
@@ -170,13 +177,16 @@ export function createOpenAIMarkdownTransformer(
 				cleanedResponse = cleanedResponse.replace(/^```markdown\s*/i, "");
 				cleanedResponse = cleanedResponse.replace(/\s*```\s*$/i, "");
 
-				const parsed = parseCombinedResponse(cleanedResponse);
+				const parsed = parseCombinedResponse(cleanedResponse, logger);
 				structuredContent = parsed.content || article.content;
 				seoMetadata = parsed.metadata;
 			} catch (error) {
-				console.error(
-					"OpenAI transformation failed, using original content:",
-					error,
+				logger?.error(
+					"OpenAI transformation failed, using original content",
+					error instanceof Error ? error : new Error(String(error)),
+					{
+						model: "gpt-4o-mini",
+					},
 				);
 				// Le contenu original est conservé dans structuredContent
 			}

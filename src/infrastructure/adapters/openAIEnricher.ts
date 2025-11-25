@@ -1,5 +1,5 @@
 import type { Article, ArticleEnrichi } from "../../domain/entities.js";
-import type { ArticleEnrichiService } from "../../domain/services.js";
+import type { ArticleEnrichiService, Logger } from "../../domain/services.js";
 
 interface OpenAIResponse {
 	description?: string;
@@ -144,6 +144,7 @@ const callOpenAI = async (
 
 const parseOpenAIResponse = (
 	response: string,
+	logger?: Logger,
 ): Partial<ArticleEnrichi["metadata"]> => {
 	try {
 		// Nettoyer la réponse (enlever markdown code blocks si présents)
@@ -162,12 +163,18 @@ const parseOpenAIResponse = (
 			seoTitle: parsed.seoTitle,
 		};
 	} catch (error) {
-		console.error("Error parsing OpenAI response:", error);
+		logger?.error(
+			"Error parsing OpenAI response",
+			error instanceof Error ? error : new Error(String(error)),
+		);
 		return {};
 	}
 };
 
-export function createOpenAIEnricher(apiKey: string): ArticleEnrichiService {
+export function createOpenAIEnricher(
+	apiKey: string,
+	logger?: Logger,
+): ArticleEnrichiService {
 	return {
 		enrichArticle: async (article: Article): Promise<ArticleEnrichi> => {
 			let structuredContent = article.content;
@@ -182,9 +189,15 @@ export function createOpenAIEnricher(apiKey: string): ArticleEnrichiService {
 					"gpt-3.5-turbo",
 					500,
 				);
-				openAIMetadata = parseOpenAIResponse(metadataResponse);
+				openAIMetadata = parseOpenAIResponse(metadataResponse, logger);
 			} catch (error) {
-				console.error("OpenAI metadata generation failed:", error);
+				logger?.error(
+					"OpenAI metadata generation failed",
+					error instanceof Error ? error : new Error(String(error)),
+					{
+						model: "gpt-3.5-turbo",
+					},
+				);
 			}
 
 			// Appel 2 : Transformer le contenu en markdown structuré
@@ -198,9 +211,12 @@ export function createOpenAIEnricher(apiKey: string): ArticleEnrichiService {
 				);
 				structuredContent = transformedContent.trim();
 			} catch (error) {
-				console.error(
-					"OpenAI content transformation failed, using original content:",
-					error,
+				logger?.error(
+					"OpenAI content transformation failed, using original content",
+					error instanceof Error ? error : new Error(String(error)),
+					{
+						model: "gpt-4o-mini",
+					},
 				);
 				// Le contenu original est conservé dans structuredContent
 			}

@@ -6,7 +6,10 @@ import type {
 	MarkdownTransformerWithSEO,
 } from "../../domain/services.js";
 import { mockArticle } from "../../__tests__/fixtures/articles.js";
-import { createMockFileRepository } from "../../__tests__/helpers/test-helpers.js";
+import {
+	createMockFileRepository,
+	createMockLogger,
+} from "../../__tests__/helpers/test-helpers.js";
 
 describe("scrapeAndTransform", () => {
 	it("should scrape and transform article to markdown", async () => {
@@ -154,26 +157,26 @@ describe("scrapeAndTransform", () => {
 		const mockRepository: FileRepository = {
 			saveMarkdown: vi.fn().mockRejectedValue(new Error("Save failed")),
 		};
-		const consoleErrorSpy = vi
-			.spyOn(console, "error")
-			.mockImplementation(() => {});
+		const mockLogger = createMockLogger();
 
 		// Act
 		const scrapeAndTransformArticle = scrapeAndTransform(
 			mockScraper,
 			mockTransformer,
 			mockRepository,
+			mockLogger,
 		);
 		const result = await scrapeAndTransformArticle("https://example.com");
 
 		// Assert
 		expect(result).toBe(mockMarkdown);
-		expect(consoleErrorSpy).toHaveBeenCalledWith(
-			"Failed to save markdown file:",
+		expect(mockLogger.error).toHaveBeenCalledWith(
+			"Failed to save markdown file",
 			expect.any(Error),
+			expect.objectContaining({
+				filename: expect.any(String),
+			}),
 		);
-
-		consoleErrorSpy.mockRestore();
 	});
 
 	it("should handle markdown with Date object in frontmatter", async () => {

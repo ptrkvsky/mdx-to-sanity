@@ -5,6 +5,7 @@ import type {
 } from "../../domain/entities.js";
 import type {
 	FileRepository,
+	Logger,
 	Scraper,
 	MarkdownTransformerWithSEO,
 	ArticleEnrichiService,
@@ -121,5 +122,14 @@ export function createMockHonoContext(
 	} as unknown as Context;
 
 	return c;
+}
+
+export function createMockLogger(): Logger {
+	return {
+		debug: vi.fn(),
+		info: vi.fn(),
+		warn: vi.fn(),
+		error: vi.fn(),
+	};
 }
 

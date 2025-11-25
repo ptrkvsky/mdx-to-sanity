@@ -72,7 +72,9 @@ export const SanityBlockSchema = z.object({
 	style: z.enum(["normal", "h1", "h2", "h3", "h4", "blockquote"]).optional(),
 	listItem: z.enum(["bullet"]).optional(),
 	markDefs: z
-		.array(z.union([InternalLinkAnnotationSchema, ExternalLinkAnnotationSchema]))
+		.array(
+			z.union([InternalLinkAnnotationSchema, ExternalLinkAnnotationSchema]),
+		)
 		.optional(),
 	children: z.array(TextSpanSchema).min(1),
 	level: z.number().optional(),
@@ -133,8 +135,8 @@ export const QuestionsAnswersSchema = z.object({
 // Open Graph
 export const OpenGraphSchema = z.object({
 	_type: z.literal("openGraph"),
-	title: z.string().max(60).optional(),
-	description: z.string().max(160).optional(),
+	title: z.string(),
+	description: z.string().max(300).optional(),
 	image: SanityImageSchema.optional(),
 	type: z.enum(["website", "article", "profile"]).optional(),
 });
@@ -159,13 +161,10 @@ export const PostSchema = z.object({
 	body: BlockContentSchema,
 
 	// Champs SEO (optionnels mais recommandés)
-	seoTitle: z
-		.string()
-		.max(60, "Le titre SEO doit faire moins de 60 caractères")
-		.optional(),
+	seoTitle: z.string().optional(),
 	seoDescription: z
 		.string()
-		.max(160, "La description SEO doit faire moins de 160 caractères")
+
 		.optional(),
 	seoImage: SanityImageSchema.optional(),
 	seoKeywords: z.string().optional(),
@@ -191,4 +190,3 @@ export type CodeBlock = z.infer<typeof CodeBlockSchema>;
 export type YouTubeEmbed = z.infer<typeof YouTubeEmbedSchema>;
 export type QuestionsAnswers = z.infer<typeof QuestionsAnswersSchema>;
 export type OpenGraph = z.infer<typeof OpenGraphSchema>;
-

@@ -1,5 +1,25 @@
 # Cursor Rules - Clean Code, KISS & SOLID
 
+## ⚠️ RÈGLE IMPORTANTE - DOSSIER EXEMPLE
+
+**INTERDICTION ABSOLUE** : Le dossier `exemple` (dans le workspace `site-perso/sanity-developpeur-web-tech/exemple`) ne doit **JAMAIS** être utilisé directement dans le code de ce projet.
+
+### Règles strictes :
+
+- ❌ **NE PAS** importer directement depuis le dossier `exemple`
+- ❌ **NE PAS** utiliser les fichiers `post.interface.ts`, `post.schema.zod.ts` ou `post.example.json` du dossier `exemple`
+- ❌ **NE PAS** référencer ce dossier dans les chemins d'import (`../`, `../../`, chemins absolus)
+- ✅ Ce projet doit avoir ses propres définitions dans `src/domain/schemas.ts`
+- ✅ Le dossier `exemple` est uniquement une **référence** pour comprendre la structure attendue
+- ✅ Si une fonctionnalité similaire est nécessaire, créer une nouvelle implémentation dans ce projet
+
+### Vérification :
+
+Avant tout commit, vérifier qu'aucun import ne pointe vers :
+- `../site-perso/.../exemple/...`
+- Tout chemin contenant `exemple`
+- Les fichiers `post.interface.ts` ou `post.schema.zod.ts` depuis l'extérieur du projet
+
 ## Principes Fondamentaux
 
 ### Clean Code

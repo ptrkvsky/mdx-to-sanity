@@ -2,6 +2,7 @@ import type { Context } from "hono";
 import { scrapeAndTransform } from "../../../application/use-cases/scrapeAndTransform.js";
 import type {
 	FileRepository,
+	Logger,
 	MarkdownTransformerWithSEO,
 	Scraper,
 } from "../../../domain/services.js";
@@ -18,6 +19,7 @@ export function createScrapeController(
 	scraper: Scraper,
 	transformer: MarkdownTransformerWithSEO,
 	repository?: FileRepository,
+	logger?: Logger,
 ) {
 	return async (c: Context) => {
 		try {
@@ -32,6 +34,7 @@ export function createScrapeController(
 				scraper,
 				transformer,
 				repository,
+				logger,
 			);
 			const markdown = await scrapeAndTransformArticle(url);
 
@@ -39,7 +42,14 @@ export function createScrapeController(
 				"Content-Type": "text/markdown",
 			});
 		} catch (error) {
-			console.error("Scraping error:", error);
+			logger?.error(
+				"Scraping error",
+				error instanceof Error ? error : new Error(String(error)),
+				{
+					endpoint: c.req.path,
+					method: c.req.method,
+				},
+			);
 			return c.json({ error: "Failed to scrape and transform content" }, 500);
 		}
 	};

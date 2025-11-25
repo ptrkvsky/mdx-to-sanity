@@ -31,4 +31,19 @@ export type MarkdownToPortableTextConverter = {
 
 export type SanityClient = {
 	createDocument: (document: Post) => Promise<string>;
+	getCategories: () => Promise<
+		Array<{ _id: string; title: string; slug?: { current: string } }>
+	>;
+	getDefaultImage: () => Promise<string | null>;
+};
+
+export type Logger = {
+	debug: (message: string, context?: Record<string, unknown>) => void;
+	info: (message: string, context?: Record<string, unknown>) => void;
+	warn: (message: string, context?: Record<string, unknown>) => void;
+	error: (
+		message: string,
+		error?: Error | unknown,
+		context?: Record<string, unknown>,
+	) => void;
 };

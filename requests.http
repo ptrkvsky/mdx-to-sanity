@@ -14,7 +14,7 @@ POST {{apiUrl}}
 Content-Type: application/json
 
 {
-  "url": "https://tkdodo.eu/blog/tooltip-components-should-not-exist"
+  "url": "https://tkdodo.eu/blog/omit-for-discriminated-unions-in-type-script"
 }
 
 ### Scraper une autre URL
@@ -45,7 +45,7 @@ POST {{markdownToSanityUrl}}
 Content-Type: application/json
 
 {
-  "filePath": "storage/markdown/2025-11-24-les-composants-tooltip-ne-devraient-pas-exister.md",
+  "filePath": "storage/markdown/2025-11-25-omit-pour-les-unions-discrimines-en-typescript.md",
   "publish": false
 }
 
@@ -54,7 +54,7 @@ POST {{markdownToSanityUrl}}
 Content-Type: application/json
 
 {
-  "filePath": "storage/markdown/2025-11-24-les-composants-tooltip-ne-devraient-pas-exister.md",
+  "filePath": "storage/markdown/2025-11-25-omit-pour-les-unions-discrimines-en-typescript.md",
   "publish": true
 }
 

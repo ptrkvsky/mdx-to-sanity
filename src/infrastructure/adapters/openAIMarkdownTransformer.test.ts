@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createOpenAIMarkdownTransformer } from "./openAIMarkdownTransformer.js";
 import { mockArticle } from "../../__tests__/fixtures/articles.js";
+import { createMockLogger } from "../../__tests__/helpers/test-helpers.js";
 import {
 	createMockOpenAIFetch,
 	createMockOpenAIFetchError,
@@ -158,10 +159,8 @@ Some content here
 { invalid json syntax {
 ===END===`;
 		global.fetch = createMockOpenAIFetch(malformedResponse);
-		const transformer = createOpenAIMarkdownTransformer(apiKey);
-		const consoleErrorSpy = vi
-			.spyOn(console, "error")
-			.mockImplementation(() => {});
+		const mockLogger = createMockLogger();
+		const transformer = createOpenAIMarkdownTransformer(apiKey, mockLogger);
 
 		// Act
 		const result = await transformer.transformToMarkdownWithSEO(mockArticle);
@@ -169,12 +168,10 @@ Some content here
 		// Assert - Should fallback to original content when parsing fails
 		expect(result).toContain(mockArticle.title);
 		expect(result).toContain(mockArticle.content);
-		expect(consoleErrorSpy).toHaveBeenCalledWith(
-			"Error parsing combined response:",
+		expect(mockLogger.error).toHaveBeenCalledWith(
+			"Error parsing combined response",
 			expect.any(Error),
 		);
-
-		consoleErrorSpy.mockRestore();
 	});
 });
 
